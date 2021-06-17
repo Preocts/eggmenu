@@ -4,60 +4,45 @@ Draw happy menus
 TODO:
 - Out of Bounds capture
 - curses type stubbing
+
 """
 import curses
 import time
 from typing import Tuple
 
 
-class HorizontalBar:
+class MenuBorder:
     """Super powerful docstring"""
 
-    def __init__(self, y: int, x: int, length: int, char: str) -> None:
+    def __init__(self, y: int, x: int, size: int, direction: str, char: str) -> None:
         """Super powerful docstring"""
         self.char = char
         self.x = x
         self.y = y
-        self.move_mod = 1 if length >= 0 else -1
-        self.stop = x + length
-        self.index = x
+        self.move_mod = 1 if size >= 0 else -1
+        if direction == "h":
+            self.stop = x + size
+        else:
+            self.stop = y + size
+        self.index = x if direction == "h" else y
+        self.direction = direction
 
     def draw(self) -> Tuple[int, int, str, bool]:
-        """Draw"""
-        if self.move_mod > 0:
-            more = not (self.index > self.stop)
-        else:
-            more = not (self.index < self.stop)
-
-        return_values = (self.y, self.index, self.char, more)
-        if more:
-            self.index += self.move_mod
-        return return_values
-
-
-class VerticalBar:
-    """Super powerful docstring"""
-
-    def __init__(self, y: int, x: int, height: int, char: str) -> None:
         """Super powerful docstring"""
-        self.char = char
-        self.x = x
-        self.y = y
-        self.move_mod = 1 if height >= 0 else -1
-        self.stop = y + height
-        self.index = y
+        end = self.at_end()
 
-    def draw(self) -> Tuple[int, int, str, bool]:
-        """Draw"""
-        if self.move_mod > 0:
-            more = not (self.index > self.stop)
+        if self.direction == "h":
+            return_values = (self.y, self.index, self.char, end)
         else:
-            more = not (self.index < self.stop)
+            return_values = (self.index, self.x, self.char, end)
 
-        return_values = (self.index, self.x, self.char, more)
-        if more:
+        if not end:
             self.index += self.move_mod
         return return_values
+
+    def at_end(self) -> bool:
+        """Super powerful docstring"""
+        return self.index >= self.stop if self.move_mod > 0 else self.index <= self.stop
 
 
 class MainScreen:
@@ -75,29 +60,26 @@ class MainScreen:
 
     def draw_frame(self, top: int, left: int, height: int, width: int) -> None:
         """Super powerful docstring"""
-        draw_horizontal_lines = [
-            HorizontalBar(top, left, width, "#"),
-            HorizontalBar(top + height, left + width, -(width), "#"),
-        ]
-        draw_vertical_lies = [
-            VerticalBar(top, left, height, "@"),
-            VerticalBar(top + height, left + width, -(height), "@"),
+        draw_lines = [
+            MenuBorder(top, left, width, "h", "#"),
+            MenuBorder(top + height - 1, left + width - 1, -(width), "h", "#"),
+            MenuBorder(top, left, height, "v", "@"),
+            MenuBorder(top + height - 1, left + width - 1, -(height), "v", "@"),
         ]
 
         while True:
-            check_set = []
-            for hline, vline in zip(draw_horizontal_lines, draw_vertical_lies):
-                check_set.append(self._draw_char(*hline.draw()))
-                check_set.append(self._draw_char(*vline.draw()))
+            is_done = []
+            for line in draw_lines:
+                is_done.append(self._draw_char(*line.draw()))
                 self.screen.refresh()
                 time.sleep(0.005)
 
-            if not any(check_set):
+            if all(is_done):
                 break
 
     def _draw_char(self, y: int, x: int, char: str, flag: bool) -> bool:
         """Super powerful docstring"""
-        if flag:
+        if not flag:
             self.screen.addstr(y, x, char)
         return flag
 
@@ -107,9 +89,9 @@ class MainScreen:
         self.screen.addstr(0, 0, "0123456789" * 6)
 
         self.draw_hor_border("-", 1, 1, 45)
-        self.draw_hor_border("-", 13, 1, 45)
+        self.draw_hor_border("-", 12, 1, 45)
         self.draw_ver_border("|", 2, 0, 10)
-        self.draw_ver_border("|", 2, 47, 10)
+        self.draw_ver_border("|", 2, 46, 10)
 
         self.draw_frame(2, 1, 10, 45)
 
