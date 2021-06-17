@@ -1,60 +1,136 @@
+"""
+Draw happy menus
+
+TODO:
+- Out of Bounds capture
+- curses type stubbing
+"""
 import curses
 import time
+from typing import Tuple
+
+
+class HorizontalBar:
+    """Super powerful docstring"""
+
+    def __init__(self, y: int, x: int, length: int, char: str) -> None:
+        """Super powerful docstring"""
+        self.char = char
+        self.x = x
+        self.y = y
+        self.move_mod = 1 if length >= 0 else -1
+        self.stop = x + length
+        self.index = x
+
+    def __str__(self) -> str:
+        """Super powerful docstring"""
+        return (
+            f"y: {self.y}, x: {self.x}, stop: {self.stop}, "
+            f"move_mod: {self.move_mod}, index: {self.index}"
+        )
+
+    def draw(self) -> Tuple[int, int, str, bool]:
+        """Draw"""
+        if self.move_mod > 0:
+            more = not (self.index > self.stop)
+        else:
+            more = not (self.index < self.stop)
+
+        return_values = (self.y, self.index, self.char, more)
+        if more:
+            self.index += self.move_mod
+        return return_values
+
+
+class VerticalBar:
+    """Super powerful docstring"""
+
+    def __init__(self, y: int, x: int, height: int, char: str) -> None:
+        """Super powerful docstring"""
+        self.char = char
+        self.x = x
+        self.y = y
+        self.move_mod = 1 if height >= 0 else -1
+        self.stop = y + height
+        self.index = y
+
+    def __str__(self) -> str:
+        """Super powerful docstring"""
+        return (
+            f"y: {self.y}, x: {self.x}, stop: {self.stop}, "
+            f"move_mod: {self.move_mod}, index: {self.index}"
+        )
+
+    def draw(self) -> Tuple[int, int, str, bool]:
+        """Draw"""
+        if self.move_mod > 0:
+            more = not (self.index > self.stop)
+        else:
+            more = not (self.index < self.stop)
+
+        return_values = (self.index, self.x, self.char, more)
+        if more:
+            self.index += self.move_mod
+        return return_values
 
 
 class MainScreen:
-    def __init__(self, screen: curses.window) -> None:
+    def __init__(self, screen: curses.window) -> None:  # type: ignore
         self.screen = screen
 
-    def draw_hor_border(
-        self, char: str, y: int, x: int, length: int, ms_delay: float = 0.0
-    ) -> None:
+    def draw_hor_border(self, char: str, y: int, x: int, length: int) -> None:
         """Draw a happy little line rooHappy"""
-        move_mod = 1 if length >= 0 else -1
-        if not ms_delay:
-            self.screen.addstr(y, x, char * length)
-        else:
-            for idx in range(abs(length)):
-                self.screen.addstr(y, x + (move_mod * idx), char)
-                self.screen.refresh()
-                time.sleep(ms_delay / 1000)
-        self.screen.refresh()
+        self.screen.addstr(y, x, char * (length + 1))
 
-    def draw_vert_border(
-        self, char: str, y: int, x: int, height: int, ms_delay: float = 0.0
-    ) -> None:
+    def draw_ver_border(self, char: str, y: int, x: int, height: int) -> None:
         """Draw a fun vertical line rooBirb"""
-        move_mod = 1 if height >= 0 else -1
         for idx in range(abs(height)):
-            self.screen.addstr(y + (move_mod * idx), x, char)
-            self.screen.refresh()
-            time.sleep(ms_delay / 1000)
+            self.screen.addstr(y + idx, x, char)
 
-        self.screen.refresh()
+    def draw_frame(self, top: int, left: int, height: int, width: int) -> None:
+        """Super powerful docstring"""
+        draw_horizontal_lines = [
+            HorizontalBar(top, left, width, "#"),
+            HorizontalBar(top + height, left + width, -(width), "#"),
+        ]
+        draw_vertical_lies = [
+            VerticalBar(top, left, height, "@"),
+            VerticalBar(top + height, left + width, -(height), "@"),
+        ]
+
+        while True:
+            check_set = []
+            for hline, vline in zip(draw_horizontal_lines, draw_vertical_lies):
+                check_set.append(self._draw_char(*hline.draw()))
+                check_set.append(self._draw_char(*vline.draw()))
+                self.screen.refresh()
+                time.sleep(0.005)
+
+            if not any(check_set):
+                break
+
+    def _draw_char(self, y: int, x: int, char: str, flag: bool) -> bool:
+        """Super powerful docstring"""
+        if flag:
+            self.screen.addstr(y, x, char)
+        return flag
 
     def main(self) -> None:
         """Super powerful docstring"""
-        # Clear screen
         self.screen.clear()
+        self.screen.addstr(0, 0, "0123456789" * 6)
 
-        self.screen.addstr("Hello from inside curses")
+        self.draw_hor_border("-", 1, 1, 45)
+        self.draw_hor_border("-", 13, 1, 45)
+        self.draw_ver_border("|", 2, 0, 10)
+        self.draw_ver_border("|", 2, 47, 10)
 
-        self.screen.addstr("General Kenobi")
-
-        self.screen.addstr(2, 0, f"{self.screen.getmaxyx()}")
-
-        self.draw_hor_border("-", 4, 4, 50)
-        self.draw_hor_border("+", 5, 4, 50, 10)
-        self.draw_hor_border("+", 6, 53, -50, 10)
-
-        self.draw_vert_border("|", 5, 55, 15, 0)
-        self.draw_vert_border("|", 5, 56, 15, 10)
-        self.draw_vert_border("|", 19, 57, -15, 10)
+        self.draw_frame(2, 1, 10, 45)
 
         self.screen.getkey()
 
 
-def main(screen: curses.window) -> None:
+def main(screen: curses.window) -> None:  # type: ignore
     """Super powerful docstring"""
     mainscreen = MainScreen(screen)
     mainscreen.main()
