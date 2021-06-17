@@ -22,13 +22,6 @@ class HorizontalBar:
         self.stop = x + length
         self.index = x
 
-    def __str__(self) -> str:
-        """Super powerful docstring"""
-        return (
-            f"y: {self.y}, x: {self.x}, stop: {self.stop}, "
-            f"move_mod: {self.move_mod}, index: {self.index}"
-        )
-
     def draw(self) -> Tuple[int, int, str, bool]:
         """Draw"""
         if self.move_mod > 0:
@@ -53,13 +46,6 @@ class VerticalBar:
         self.move_mod = 1 if height >= 0 else -1
         self.stop = y + height
         self.index = y
-
-    def __str__(self) -> str:
-        """Super powerful docstring"""
-        return (
-            f"y: {self.y}, x: {self.x}, stop: {self.stop}, "
-            f"move_mod: {self.move_mod}, index: {self.index}"
-        )
 
     def draw(self) -> Tuple[int, int, str, bool]:
         """Draw"""
