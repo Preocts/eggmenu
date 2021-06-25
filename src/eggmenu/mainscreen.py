@@ -95,6 +95,10 @@ class MainScreen:
 
         self.draw_frame(2, 1, 10, 45)
 
+        maxy, maxx = self.screen.getmaxyx()
+
+        self.draw_frame(0, 0, maxy - 1, maxx - 1)
+
         self.screen.getkey()
 
 
